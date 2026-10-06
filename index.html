@@ -4,262 +4,211 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Omar Elmokadem</title>
-<meta name="description" content="Computer science student at Qatar University. Mobile apps, browser extensions, homelab, cybersecurity.">
+<meta name="description" content="Computer science student at Qatar University and former Internal Audit and Cybersecurity intern at QatarEnergy LNG.">
 <meta property="og:title" content="Omar Elmokadem">
-<meta property="og:description" content="Computer science student at Qatar University. Mobile apps, browser extensions, homelab, cybersecurity.">
+<meta property="og:description" content="Computer science student at Qatar University and former Internal Audit and Cybersecurity intern at QatarEnergy LNG.">
 <meta property="og:url" content="https://oelmokadem.me/">
-<meta name="theme-color" content="#E9ECEE" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#141619" media="(prefers-color-scheme: dark)">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%237A1230'/%3E%3Cpath d='M11 9a10 10 0 0 1 0 14M16 6a15 15 0 0 1 0 20M21 3a20 20 0 0 1 0 26' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' transform='translate(-3 0)'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0E1012">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2315181B'/%3E%3Cpath d='M8 11l5 5-5 5' fill='none' stroke='%23E58BA4' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M16 22h8' stroke='%23F2C879' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Layout: deliberately single dark look. A command rail on the left, a shell session on the right; stacks on phones */
   :root {
-    --bg: #E9ECEE;
-    --surface: #F6F7F8;
-    --ink: #181B1F;
-    --muted: #59626C;
-    --line: #C9CFD5;
-    --maroon: #7A1230;
-    --maroon-ink: #FFFFFF;
-    --wave: #7A1230;
+    --bg: #0E1012; --term: #15181B; --fg: #E4E2DC; --muted: #8C918F; --line: #262A2E;
+    --prompt: #E58BA4; --ok: #9FD3B4; --hl: #F2C879;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --sans: "IBM Plex Sans", system-ui, sans-serif;
+    color-scheme: dark;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #141619;
-      --surface: #1C1F23;
-      --ink: #E6E8EB;
-      --muted: #9AA3AD;
-      --line: #2E3339;
-      --maroon: #D9718F;
-      --maroon-ink: #1A0710;
-      --wave: #D9718F;
-    }
-  }
-
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: "Archivo", system-ui, sans-serif;
-    font-variation-settings: "wdth" 100;
-    font-size: 1.0625rem;
-    line-height: 1.55;
-  }
-  a { color: inherit; }
-  :focus-visible { outline: 3px solid var(--maroon); outline-offset: 3px; border-radius: 4px; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 400 1rem/1.6 var(--sans); padding-inline: 1rem; padding-block: 1.5rem 3rem; }
+  a { color: var(--hl); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--prompt); outline-offset: 2px; }
 
-  .page { max-width: 40rem; margin: 0 auto; padding: 0 1.25rem 4rem; }
+  .shell { max-width: 1280px; margin: 0 auto; display: grid; gap: 1.25rem; }
+  .rail h1 { margin: 0; font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.05; font-weight: 700; letter-spacing: -.02em; }
+  .rail p { margin: .75rem 0 0; color: var(--muted); max-width: 32rem; }
+  .role { margin-top: 1.25rem; padding: .875rem 1rem; border: 1px solid var(--line); border-left: 3px solid var(--hl); border-radius: 10px; background: var(--term); display: grid; gap: .125rem; max-width: 32rem; }
+  .role-k { font: 500 .8125rem var(--mono); color: var(--hl); }
+  .role strong { font-weight: 700; font-size: 1.0625rem; line-height: 1.35; }
+  .role span:last-child { color: var(--muted); font-size: .9375rem; }
+  .cmds { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
+  .cmds button { font: 500 .9375rem var(--mono); color: var(--fg); background: var(--term); border: 1px solid var(--line); border-radius: 8px; padding: .5rem .8rem; cursor: pointer; }
+  .cmds button:hover { border-color: var(--prompt); color: var(--prompt); }
+  .direct { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; font-weight: 600; }
 
-  /* Hero: the one loud thing */
-  .hero { position: relative; padding: 4.5rem 0 2.5rem; overflow: hidden; }
-  .waves {
-    position: absolute; top: 6rem; right: -1.75rem;
-    width: 11rem; height: 11rem; pointer-events: none;
-  }
-  .waves path { fill: none; stroke: var(--wave); stroke-width: 6; stroke-linecap: round; }
-  .greeting {
-    margin: 0 0 1rem; color: var(--maroon); font-weight: 600;
-    min-height: 1.55em;
-  }
-  h1 {
-    margin: 0;
-    font-size: clamp(3rem, 15vw, 5.5rem);
-    line-height: .86;
-    font-weight: 850;
-    font-variation-settings: "wdth" 125;
-    letter-spacing: -0.02em;
-    position: relative;
-  }
-  h1 span { display: block; }
-  .intro { margin: 1.5rem 0 0; max-width: 32rem; font-size: 1.1875rem; color: var(--ink); }
+  .term { background: var(--term); border: 1px solid var(--line); border-radius: 14px; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .bar { display: flex; align-items: center; gap: .5rem; padding: .7rem 1rem; border-bottom: 1px solid var(--line); font: 500 .8125rem var(--mono); color: var(--muted); }
+  .dots { display: flex; gap: .375rem; margin-right: .5rem; }
+  .dots i { width: .7rem; height: .7rem; border-radius: 50%; background: var(--line); }
+  .out { padding: 1rem 1.1rem; font: 400 .9375rem/1.65 var(--mono); overflow-wrap: anywhere; min-height: 24rem; overflow-y: auto; }
+  .out .p { color: var(--prompt); }
+  .out .c { color: var(--fg); font-weight: 600; }
+  .out .dim { color: var(--muted); }
+  .out .ok { color: var(--ok); }
+  .out .h { color: var(--hl); font-weight: 600; }
 
-  .actions { display: flex; flex-wrap: wrap; gap: .625rem; margin-top: 1.75rem; }
-  .btn {
-    display: inline-flex; align-items: center; gap: .5rem;
-    min-height: 3rem; padding: 0 1.125rem;
-    border: 2px solid var(--ink); border-radius: 999px;
-    text-decoration: none; font-weight: 600;
-  }
-  .btn svg { width: 1.125rem; height: 1.125rem; flex: none; }
-  .btn.primary { background: var(--maroon); border-color: var(--maroon); color: var(--maroon-ink); }
-  .btn:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-  .btn.primary:hover { background: var(--ink); border-color: var(--ink); }
+  .block { margin: 0 0 1.5rem; }
+  .cmdline { margin: 0 0 .5rem; }
+  .entry { margin: 0 0 1.125rem; }
+  .entry:last-child { margin-bottom: 0; }
+  .entry .sub { margin: .125rem 0 0; color: var(--muted); }
+  .entry .desc { margin: .25rem 0 0; padding-left: 2ch; border-left: 1px solid var(--line); }
+  .entry .desc p { margin: 0; }
+  .entry .meta { margin: .375rem 0 0; padding-left: 2ch; color: var(--muted); }
+  .entry .go { margin: .25rem 0 0; padding-left: 2ch; display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
+  .kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0 2ch; }
 
-  /* Content */
-  section { padding-top: 3rem; }
-  h2 {
-    margin: 0 0 1.25rem;
-    font-size: 1.5rem; line-height: 1.1;
-    font-weight: 800; font-variation-settings: "wdth" 112;
-  }
-  .list { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ink); }
-  .item { padding: 1.125rem 0 1.25rem; border-bottom: 1px solid var(--line); }
-  .item h3 {
-    margin: 0; font-size: 1.1875rem; line-height: 1.25;
-    font-weight: 700; font-variation-settings: "wdth" 105;
-  }
-  .item h3 a { text-decoration-thickness: 2px; text-underline-offset: 3px; }
-  .item p { margin: .375rem 0 0; color: var(--muted); }
-  .stack { margin-top: .625rem; display: flex; flex-wrap: wrap; gap: .375rem; padding: 0; list-style: none; }
-  .stack li {
-    font-size: .875rem; padding: .125rem .625rem;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
-    font-variation-settings: "wdth" 90;
-  }
-  .item .when { margin-top: .125rem; color: var(--ink); font-size: .9375rem; font-weight: 500; }
-  .item .links { display: flex; flex-wrap: wrap; gap: .375rem 1.25rem; margin-top: .5rem; color: var(--maroon); font-weight: 600; }
-  .item .links a { text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .in { display: flex; gap: .6rem; align-items: center; padding: .75rem 1.1rem; border-top: 1px solid var(--line); font: 400 .9375rem var(--mono); }
+  .in label { color: var(--prompt); white-space: nowrap; }
+  .in input { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--fg); font: inherit; outline: none; caret-color: var(--prompt); }
 
-  footer {
-    margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
-    color: var(--muted); font-size: .9375rem;
-    display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; justify-content: space-between;
-  }
-
-  /* One orchestrated moment: the tap ripple */
-  @media (prefers-reduced-motion: no-preference) {
-    .waves path { opacity: 0; animation: ripple 2.4s cubic-bezier(.2,.7,.2,1) .15s 1 forwards; }
-    .waves path:nth-child(2) { animation-delay: .35s; }
-    .waves path:nth-child(3) { animation-delay: .55s; }
-    @keyframes ripple {
-      0%   { opacity: 0; transform: translateX(-14px); }
-      35%  { opacity: 1; transform: translateX(0); }
-      100% { opacity: .22; transform: translateX(0); }
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .waves path { opacity: .22; }
-  }
-
-  @media (min-width: 640px) {
-    .hero { padding-top: 6rem; }
-    .waves { right: -2rem; width: 14rem; height: 14rem; top: 6.5rem; }
+  @media (min-width: 960px) {
+    body { padding-block: 3rem 4rem; }
+    .shell { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 2.5rem; align-items: start; }
+    .rail { position: sticky; top: 3rem; }
+    .cmds { flex-direction: column; align-items: flex-start; }
+    .out { min-height: 34rem; max-height: calc(100vh - 12rem); }
   }
 </style>
+
 </head>
 <body>
-<main class="page">
-
-  <header class="hero">
-    <svg class="waves" viewBox="0 0 120 120" aria-hidden="true">
-      <path d="M30 34a32 32 0 0 1 0 52"/>
-      <path d="M52 20a52 52 0 0 1 0 80"/>
-      <path d="M74 6a72 72 0 0 1 0 108"/>
-    </svg>
-    <p class="greeting" id="greeting">Hi, I'm Omar.</p>
-    <h1><span>Omar</span><span>Elmokadem</span></h1>
-    <p class="intro">Computer science student in Qatar University's Honors Program. I build mobile apps and browser extensions, run my own homelab, and interned in internal audit and cybersecurity at QatarEnergy LNG.</p>
-
-    <div class="actions">
-      <a class="btn primary" href="/cv.pdf" download="Omar-Elmokadem-CV.pdf">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
-        Download CV
-      </a>
-      <a class="btn" href="https://github.com/oelmokadem" rel="me">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
-        GitHub
-      </a>
-      <a class="btn" href="https://www.linkedin.com/in/oelmokadem" rel="me">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.75h4v11H3v-11Zm6.5 0h3.8v1.5h.06c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.77 2.65 4.77 6.1v5.45h-4v-4.83c0-1.15-.02-2.63-1.6-2.63-1.6 0-1.85 1.25-1.85 2.55v4.91h-4v-11Z"/></svg>
-        LinkedIn
-      </a>
-      <a class="btn" href="mailto:omarsamirelmokadem@gmail.com">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
-        Email
-      </a>
+<div class="shell">
+  <aside class="rail">
+    <h1>Omar Elmokadem</h1>
+    <p>Computer science student in Qatar University's Honors Program, focused on cybersecurity and IT audit.</p>
+    <div class="role">
+      <span class="role-k">Latest role</span>
+      <strong>Summer Intern, Internal Audit and Cybersecurity</strong>
+      <span>QatarEnergy LNG, June to July 2026</span>
     </div>
-  </header>
+    <div class="cmds" id="cmds"></div>
+    <div class="direct">
+      <a href="/cv.pdf">Download CV</a>
+      <a href="https://github.com/oelmokadem">GitHub</a>
+      <a href="https://www.linkedin.com/in/oelmokadem">LinkedIn</a>
+    </div>
+  </aside>
 
-  <section aria-labelledby="projects">
-    <h2 id="projects">Projects</h2>
-    <ul class="list">
-      <li class="item">
-        <h3>Mizan: Islamic Habit Tracker</h3>
-        <p>A mobile app for tracking daily Islamic habits, published on both app stores.</p>
-        <p class="links"><a href="https://apps.apple.com/us/app/mizan-islamic-tracker/id6768990599">App Store</a> <a href="https://play.google.com/store/apps/details?id=com.omararra.mizanislamtracker">Google Play</a></p>
-        <ul class="stack"><li>Expo</li><li>React Native</li><li>MongoDB Atlas</li></ul>
-      </li>
-      <li class="item">
-        <h3>ACM Banner Redesign</h3>
-        <p>A Chrome extension for the ACM QU Chapter that restyles Qatar University's myBanner portal. Two themes (QU maroon and ACM mint), light and dark modes, English and Arabic. Open source under MIT.</p>
-        <p class="links"><a href="https://chromewebstore.google.com/detail/jlkacmjcffobfchlhmeeifpgefkaifcn">Chrome Web Store</a></p>
-        <ul class="stack"><li>Chrome extension</li><li>JavaScript</li><li>CSS</li></ul>
-      </li>
-      <li class="item">
-        <h3>Automated notification system</h3>
-        <p>Watches an online platform for updates and sends real-time alerts to Discord and WhatsApp. Scheduled on Azure Functions, with error handling and status logging.</p>
-        <ul class="stack"><li>Python</li><li>Azure Functions</li><li>Discord webhooks</li></ul>
-      </li>
-      <li class="item">
-        <h3>Homelab</h3>
-        <p>A Proxmox server running self-hosted services in Docker, secured behind Cloudflare and Nginx Proxy Manager.</p>
-        <ul class="stack"><li>Proxmox VE</li><li>Docker</li><li>Nginx Proxy Manager</li><li>Cloudflare</li></ul>
-      </li>
-    </ul>
+  <section class="term" aria-label="Terminal">
+    <div class="bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>omar@oelmokadem.me: ~</div>
+    <div class="out" id="out" aria-live="polite"></div>
+    <form class="in" id="form">
+      <label for="cmd">omar@qu:~$</label>
+      <input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type help, or pick a command">
+    </form>
   </section>
+</div>
 
-  <section aria-labelledby="experience">
-    <h2 id="experience">Experience</h2>
-    <ul class="list">
-      <li class="item">
-        <h3>QatarEnergy LNG</h3>
-        <p class="when">Summer intern, Internal Audit and Cybersecurity. June to July 2026</p>
-        <p>Reviewed departmental risk assessments and drafted audit questions from them for a department audit. Spent a week with the security team getting hands-on with Burp Suite.</p>
-      </li>
-      <li class="item">
-        <h3><a href="https://qu.acm.org/">ACM QU Chapter</a></h3>
-        <p class="when">Tech Team member</p>
-        <p>Builds tools for the chapter, including the ACM Banner Redesign extension.</p>
-      </li>
-    </ul>
-  </section>
-
-  <section aria-labelledby="achievements">
-    <h2 id="achievements">Achievements</h2>
-    <ul class="list">
-      <li class="item">
-        <h3>1st place, Microsoft x Qatar Scientific Club Summer Data Camp</h3>
-        <p class="when">August 2025</p>
-        <p>Five-day data and AI program. Built insights from Qatar Open Data Portal datasets with Power BI and AI models.</p>
-      </li>
-      <li class="item">
-        <h3>3rd place, Qatar University Health Tech Hackathon</h3>
-        <p class="when">November to December 2025</p>
-        <p>Developed a health-tech project and presented it to judges at World Summit AI Qatar.</p>
-      </li>
-    </ul>
-  </section>
-
-  <section aria-labelledby="education">
-    <h2 id="education">Education</h2>
-    <ul class="list">
-      <li class="item">
-        <h3>Qatar University</h3>
-        <p class="when">2024 to 2028</p>
-        <p>BSc Computer Science, College of Engineering. Honors Program, GPA 3.93/4.00.</p>
-      </li>
-    </ul>
-  </section>
-
-  <footer>
-    <span>Qatar</span>
-    <a href="https://github.com/oelmokadem">github.com/oelmokadem</a>
-  </footer>
-</main>
+<noscript>
+  <p style="max-width:1280px;margin:1rem auto">Projects: ACM Banner Redesign (Chrome extension), Mizan: Islamic Habit Tracker (App Store), Homelab, Automated notification system.
+  Contact: omarsamirelmokadem@gmail.com</p>
+</noscript>
 
 <script>
-  // Visitors arriving from the NFC bracelet land on /?via=nfc
-  try {
-    var p = new URLSearchParams(location.search);
-    if (p.get("via") === "nfc") {
-      document.getElementById("greeting").textContent = "You just tapped my bracelet. Hi, I'm Omar.";
-      history.replaceState(null, "", "/");
-    }
-  } catch (e) {}
+  var CV_URL = "/cv.pdf";
+  var out = document.getElementById("out");
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function link(href, text) { return '<a href="' + href + '">' + esc(text) + "</a>"; }
+  function entry(o) {
+    var h = '<div class="entry"><div><span class="h">' + esc(o.name) + "</span>" + (o.when ? '  <span class="dim">' + esc(o.when) + "</span>" : "") + "</div>";
+    if (o.sub) h += '<div class="sub">' + esc(o.sub) + "</div>";
+    h += '<div class="desc">' + o.desc.map(function (d) { return "<p>" + d + "</p>"; }).join("") + "</div>";
+    if (o.links) h += '<div class="go">' + o.links.join("") + "</div>";
+    if (o.stack) h += '<div class="meta">stack: ' + esc(o.stack) + "</div>";
+    return h + "</div>";
+  }
+
+  var C = {
+    whoami: function () {
+      return entry({ name: "Omar Elmokadem", sub: "Computer science student, Qatar University",
+        desc: ["Summer Intern, Internal Audit and Cybersecurity at QatarEnergy LNG (2026).",
+               "BSc Computer Science, College of Engineering. Honors Program, GPA 3.93 / 4.00.",
+               "Tech Team member, " + link("https://qu.acm.org/", "ACM QU Chapter") + "."] });
+    },
+    projects: function () {
+      return [
+        entry({ name: "acm-banner/", sub: "ACM Banner Redesign. Chrome extension",
+          desc: ["A Chrome extension for the ACM QU Chapter that restyles Qatar University's myBanner portal.",
+                 "Two themes (QU maroon and ACM mint), light and dark modes, English and Arabic. Open source under MIT."],
+          links: [link("https://chromewebstore.google.com/detail/jlkacmjcffobfchlhmeeifpgefkaifcn", "Chrome Web Store")],
+          stack: "JavaScript, CSS" }),
+        entry({ name: "mizan/", sub: "Mizan: Islamic Habit Tracker. Mobile app",
+          desc: ["A mobile app for tracking daily Islamic habits.",
+                 '<span class="ok">Live on the App Store.</span> <span class="dim">Android version in closed beta on Google Play.</span>'],
+          links: [link("https://apps.apple.com/us/app/mizan-islamic-tracker/id6768990599", "App Store")],
+          stack: "Expo, React Native, MongoDB Atlas" }),
+        entry({ name: "homelab/", sub: "Self-hosted home server",
+          desc: ["A Proxmox server running self-hosted services in Docker, secured behind Cloudflare and Nginx Proxy Manager."],
+          stack: "Proxmox VE, Docker, Nginx Proxy Manager, Cloudflare" }),
+        entry({ name: "notifier/", sub: "Automated notification system",
+          desc: ["Watches an online platform for updates and sends real-time alerts to Discord and WhatsApp.",
+                 "Scheduled on Azure Functions, with error handling and status logging."],
+          stack: "Python, Azure Functions, Discord webhooks" })
+      ].join("");
+    },
+    experience: function () {
+      return entry({ name: "QatarEnergy LNG", when: "Jun to Jul 2026", sub: "Summer Intern, Internal Audit and Cybersecurity",
+          desc: ['<span class="ok">Internal Audit</span> <span class="dim">3 weeks</span>',
+                 "Worked on internal IT audit engagements covering Information Risk Management and the Security and Network Operations Centres.",
+                 "Reviewed departmental risk assessments and drafted audit questions from them to support the audit of a department.",
+                 "Cross-referenced controls against ISO/IEC 27002:2022 and NIST CSF 2.0.",
+                 '<br><span class="ok">Cybersecurity</span> <span class="dim">1 week</span>',
+                 "Gained hands-on experience with Burp Suite under the guidance of the security team."],
+          stack: "ISO/IEC 27002:2022, NIST CSF 2.0, Burp Suite, Excel" }) +
+        entry({ name: "ACM QU Chapter", sub: "Tech Team member",
+          desc: ["Builds tools for the chapter, including the ACM Banner Redesign extension."],
+          links: [link("https://qu.acm.org/", "qu.acm.org")] });
+    },
+    awards: function () {
+      return entry({ name: "1st place", when: "Aug 2025", sub: "Microsoft x Qatar Scientific Club Summer Data Camp",
+          desc: ["Five-day data and AI program. Built insights from Qatar Open Data Portal datasets with Power BI and AI models."] }) +
+        entry({ name: "3rd place", when: "Nov to Dec 2025", sub: "Qatar University Health Tech Hackathon",
+          desc: ["Developed a health-tech project and presented it to judges at World Summit AI Qatar."] });
+    },
+    contact: function () {
+      return '<div class="kv">' +
+        '<span class="dim">email</span><span>' + link("mailto:omarsamirelmokadem@gmail.com", "omarsamirelmokadem@gmail.com") + "</span>" +
+        '<span class="dim">github</span><span>' + link("https://github.com/oelmokadem", "github.com/oelmokadem") + "</span>" +
+        '<span class="dim">linkedin</span><span>' + link("https://www.linkedin.com/in/oelmokadem", "linkedin.com/in/oelmokadem") + "</span>" +
+        '<span class="dim">cv</span><span>' + link(CV_URL, "Download CV (PDF)") + "</span></div>";
+    },
+    help: function () {
+      return "commands: " + ["experience", "projects", "whoami", "awards", "contact", "clear"].map(function (k) { return '<span class="c">' + k + "</span>"; }).join("  ");
+    },
+    clear: function () { out.innerHTML = ""; return null; }
+  };
+
+  function run(cmd, opts) {
+    cmd = (cmd || "").trim().toLowerCase();
+    if (!cmd) return;
+    var body = C.hasOwnProperty(cmd) ? C[cmd]() : '<span class="dim">command not found: ' + esc(cmd) + ". Try help.</span>";
+    if (body === null) return;
+    var d = document.createElement("div"); d.className = "block";
+    d.innerHTML = '<div class="cmdline"><span class="p">omar@qu:~$ </span><span class="c">' + esc(cmd) + "</span></div>" + body;
+    out.appendChild(d);
+    if (!opts || !opts.quiet) d.scrollIntoView({ block: "nearest" }), out.scrollTop = d.offsetTop - out.offsetTop - 8;
+  }
+
+  var cmds = document.getElementById("cmds");
+  ["experience", "projects", "whoami", "awards", "contact"].forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = "$ " + k;
+    b.addEventListener("click", function () { run(k); }); cmds.appendChild(b);
+  });
+  document.getElementById("form").addEventListener("submit", function (e) {
+    e.preventDefault(); var i = document.getElementById("cmd"); run(i.value); i.value = "";
+  });
+
+  try { if (/[?&]via=nfc/.test(location.search)) history.replaceState(null, "", location.pathname); } catch (e) {}
+  ["whoami", "experience"].forEach(function (k) { run(k, { quiet: true }); });
+  out.scrollTop = 0;
 </script>
+
 </body>
 </html>
