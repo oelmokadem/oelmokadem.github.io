@@ -13,17 +13,18 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2315181B'/%3E%3Cpath d='M8 11l5 5-5 5' fill='none' stroke='%23E58BA4' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M16 22h8' stroke='%23F2C879' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&family=Lexend:wght@400;600&display=swap" rel="stylesheet">
 <style>
   /* Layout: deliberately single dark look. A command rail on the left, a shell session on the right; stacks on phones */
   :root {
-    --bg: #0E1012; --term: #15181B; --fg: #E4E2DC; --muted: #8C918F; --line: #262A2E;
-    --prompt: #E58BA4; --ok: #9FD3B4; --hl: #F2C879;
+    --bg: #0E1012; --term: #15181B; --deep: #101215; --fg: #E4E2DC; --muted: #8C918F; --line: #262A2E;
+    --prompt: #E58BA4; --ok: #9FD3B4; --hl: #F2C879; --err: #F08A7E;
     --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
     --sans: "IBM Plex Sans", system-ui, sans-serif;
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--fg); font: 400 1rem/1.6 var(--sans); padding-inline: 1rem; padding-block: 1.5rem 3rem; }
   a { color: var(--hl); text-underline-offset: 3px; }
@@ -39,18 +40,32 @@
   .cmds { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
   .cmds button { font: 500 .9375rem var(--mono); color: var(--fg); background: var(--term); border: 1px solid var(--line); border-radius: 8px; padding: .5rem .8rem; cursor: pointer; }
   .cmds button:hover { border-color: var(--prompt); color: var(--prompt); }
+  .hint { margin-top: .75rem; font: 400 .8125rem var(--mono); color: var(--muted); }
   .direct { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; font-weight: 600; }
 
   .term { background: var(--term); border: 1px solid var(--line); border-radius: 14px; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
   .bar { display: flex; align-items: center; gap: .5rem; padding: .7rem 1rem; border-bottom: 1px solid var(--line); font: 500 .8125rem var(--mono); color: var(--muted); }
-  .dots { display: flex; gap: .375rem; margin-right: .5rem; }
+  .dots { display: flex; gap: .375rem; margin-right: .5rem; flex: none; }
+  .bar { padding-block: .45rem; }
+  .tabs { display: flex; gap: .25rem; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .tab { display: inline-flex; align-items: center; gap: .45rem; flex: none; font: 500 .8125rem var(--mono); color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: 7px; padding: .25rem .6rem; cursor: pointer; white-space: nowrap; }
+  .tab:hover { color: var(--fg); }
+  .tab[aria-selected="true"] { background: var(--deep); color: var(--fg); border-color: var(--line); }
+  .tab .x { display: inline-grid; place-items: center; width: 1.1rem; height: 1.1rem; border-radius: 4px; color: var(--muted); }
+  .tab .x:hover { background: var(--line); color: var(--fg); }
+  .pane { padding: 1rem 1.1rem; }
+  @media (max-width: 600px) { .bar > .dots { display: none; } }
+  .pl { font: inherit; color: var(--hl); font-weight: 600; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+  .pl:hover { text-decoration-color: var(--hl); }
   .dots i { width: .7rem; height: .7rem; border-radius: 50%; background: var(--line); }
-  .out { padding: 1rem 1.1rem; font: 400 .9375rem/1.65 var(--mono); overflow-wrap: anywhere; min-height: 24rem; overflow-y: auto; }
+  .out { padding: 1rem 1.1rem; font: 400 .9375rem/1.65 var(--mono); overflow-wrap: anywhere; min-height: 24rem; overflow-y: auto; cursor: text; }
   .out .p { color: var(--prompt); }
   .out .c { color: var(--fg); font-weight: 600; }
   .out .dim { color: var(--muted); }
   .out .ok { color: var(--ok); }
   .out .h { color: var(--hl); font-weight: 600; }
+  .out .err { color: var(--err); }
+  .out .dir { color: #8FB8E8; font-weight: 600; }
 
   .block { margin: 0 0 1.5rem; }
   .cmdline { margin: 0 0 .5rem; }
@@ -62,6 +77,78 @@
   .entry .meta { margin: .375rem 0 0; padding-left: 2ch; color: var(--muted); }
   .entry .go { margin: .25rem 0 0; padding-left: 2ch; display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
   .kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0 2ch; }
+  .ls { display: flex; flex-wrap: wrap; gap: .25rem 2.5ch; }
+
+  .fetch { display: grid; gap: .5rem 3ch; grid-template-columns: 1fr; }
+  .fetch pre { margin: 0; color: var(--prompt); font: inherit; line-height: 1.15; }
+  .fetch .kv span:nth-child(odd) { color: var(--hl); font-weight: 600; }
+  .swatch { display: flex; gap: 0; margin-top: .5rem; }
+  .swatch i { width: 1.5rem; height: .9rem; }
+
+  .win { margin-top: .5rem; border: 1px solid var(--line); border-radius: 10px; background: var(--deep); overflow: hidden; }
+  .win-bar { display: flex; align-items: center; gap: .5rem; padding: .45rem .75rem; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .8125rem; }
+  .win-bar .dots i { width: .55rem; height: .55rem; }
+  .shots { display: flex; gap: .75rem; padding: .75rem; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .shots figure { margin: 0; flex: none; scroll-snap-align: start; }
+  .shots img { display: block; height: 22rem; max-height: 60vh; width: auto; max-width: 80vw; border-radius: 8px; border: 1px solid var(--line); background: var(--term); }
+  .shots.wide img { height: auto; width: min(36rem, 75vw); }
+  .shots figcaption { margin-top: .375rem; color: var(--muted); font-size: .8125rem; }
+  .empty { padding: 1rem .75rem; color: var(--muted); }
+
+  .alert { margin: .75rem; display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); gap: .75rem; font-family: var(--sans); font-size: .9375rem; }
+  .alert .av { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: #5865F2; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .8125rem; }
+  .alert .who { font-weight: 700; } .alert .who small { margin-left: .5rem; font-weight: 400; color: var(--muted); font-size: .75rem; }
+  .alert .bot { font-size: .625rem; background: #5865F2; color: #fff; border-radius: 3px; padding: 0 .3rem; margin-left: .375rem; vertical-align: 1px; }
+  .alert .emb { margin-top: .375rem; border-left: 4px solid var(--ok); background: var(--term); border-radius: 4px; padding: .6rem .8rem; }
+  .alert .emb b { display: block; }
+
+  .prog { display: inline-block; white-space: pre; }
+
+  .demo { padding: .875rem; display: grid; gap: 1rem; font-family: var(--sans); }
+  .demo .seg { display: inline-flex; flex-wrap: wrap; gap: .25rem; padding: .2rem; border: 1px solid var(--line); border-radius: 9px; background: var(--term); }
+  .demo .seg button, .demo .nav button { font: 500 .8125rem var(--mono); color: var(--muted); background: transparent; border: 0; border-radius: 6px; padding: .35rem .6rem; cursor: pointer; }
+  .demo .seg button[aria-pressed="true"] { background: var(--prompt); color: #1A0710; }
+  .demo .seg button:hover:not([aria-pressed="true"]) { color: var(--fg); }
+  .demo .ctl { display: grid; gap: .75rem; align-content: start; justify-items: start; }
+  .demo .ctl.row { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .demo .nav { display: flex; align-items: center; gap: .75rem; font-family: var(--mono); }
+  .demo .nav button { border: 1px solid var(--line); color: var(--fg); padding: .3rem .7rem; }
+  .demo p { margin: 0; font-size: .8125rem; }
+  .phone { width: 13.5rem; max-width: 100%; aspect-ratio: 460 / 995; border-radius: 1.6rem; padding: .4rem; background: #000; border: 1px solid var(--line); }
+  .phone img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 1.25rem; background: var(--term); }
+  @media (min-width: 640px) { .demo.mz { grid-template-columns: max-content minmax(0, 1fr); } }
+
+  .mb { --x-page:#faf8f9; --x-surface:#fff; --x-surface-2:#f3edef; --x-ink:#221419; --x-body:#46363d; --x-muted:#7a6970; --x-hairline:#e8dee2;
+        --x-brand-tint:#f7e9ee; --x-brand-tint-border:#e5c3cf; --x-brand-text:#8e1637; --x-header-bg:#8e1637; --x-header-ink:#fff; --x-link:#8e1637;
+        --x-font: "Helvetica Neue", Helvetica, Arial, sans-serif; --x-r: 10px;
+        border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--x-page); color: var(--x-body); font: 400 .875rem/1.45 var(--x-font); transition: background .25s, color .25s; }
+  .mb[data-skin="qu-dark"] { --x-page:#171114; --x-surface:#211a1e; --x-surface-2:#2a2126; --x-ink:#f5eef1; --x-body:#d8ccd1; --x-muted:#a2929a; --x-hairline:#372c32;
+        --x-brand-tint:#2e1720; --x-brand-tint-border:#4d2533; --x-brand-text:#e58aa2; --x-header-bg:#5f0f26; --x-link:#e58aa2; }
+  .mb[data-skin="acm-light"] { --x-page:#fbfafb; --x-surface:#fff; --x-surface-2:#f1f0f1; --x-ink:#010000; --x-body:#373637; --x-muted:#706d70; --x-hairline:#e2e0e2;
+        --x-brand-tint:#e0f8f5; --x-brand-tint-border:#a7e8e0; --x-brand-text:#17756a; --x-header-bg:#010000; --x-header-ink:#fbfafb; --x-link:#17756a;
+        --x-font: "Lexend", "Helvetica Neue", Arial, sans-serif; }
+  .mb[data-skin="acm-dark"] { --x-page:#010000; --x-surface:#101312; --x-surface-2:#1a1d1c; --x-ink:#fbfafb; --x-body:#d6d4d6; --x-muted:#9c999c; --x-hairline:#262a29;
+        --x-brand-tint:#0d2724; --x-brand-tint-border:#1f4b45; --x-brand-text:#3ae4d1; --x-header-bg:#010000; --x-header-ink:#fbfafb; --x-link:#3ae4d1;
+        --x-font: "Lexend", "Helvetica Neue", Arial, sans-serif; }
+  .mb-url { padding: .35rem .75rem; font: 400 .75rem var(--mono); color: var(--muted); background: var(--deep); border-bottom: 1px solid var(--line); }
+  .mb-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .8rem 1rem; background: var(--x-header-bg); color: var(--x-header-ink); border-bottom: 1px solid var(--x-hairline); }
+  .mb-head b { font-size: 1.0625rem; } .mb-head span { opacity: .8; font-size: .8125rem; }
+  .mb-body { padding: 1rem; display: grid; gap: .75rem; }
+  .mb-title { color: var(--x-ink); font-weight: 600; font-size: 1.25rem; }
+  .mb-note { background: var(--x-brand-tint); border: 1px solid var(--x-brand-tint-border); color: var(--x-brand-text); padding: .55rem .75rem; border-radius: var(--x-r); }
+  .mb-grid { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
+  .mb-card { display: grid; gap: .125rem; padding: .7rem .8rem; background: var(--x-surface); border: 1px solid var(--x-hairline); border-radius: var(--x-r); color: var(--x-body); }
+  .mb-card b { color: var(--x-link); font-weight: 600; }
+  .mb-card span { color: var(--x-muted); font-size: .8125rem; }
+  .mb[data-skin="off"] { --x-page:#fff; --x-surface:#fff; --x-ink:#000; --x-body:#000; --x-muted:#333; --x-hairline:#999; --x-header-bg:#fff; --x-header-ink:#000;
+        --x-brand-tint:#fff; --x-brand-tint-border:#fff; --x-brand-text:#000; --x-link:#00e; --x-font: "Times New Roman", Times, serif; --x-r: 0; }
+  .mb[data-skin="off"] .mb-head { border-bottom: 3px double #999; }
+  .mb[data-skin="off"] .mb-card { border: 0; padding: .1rem 0; }
+  .mb[data-skin="off"] .mb-card b { text-decoration: underline; font-weight: 400; }
+  .mb[data-skin="off"] .mb-grid { grid-template-columns: 1fr; gap: .25rem; }
+  .mb[data-skin="off"] .mb-title { font-weight: 700; }
+  @media (prefers-reduced-motion: reduce) { .mb { transition: none; } }
+
 
   .in { display: flex; gap: .6rem; align-items: center; padding: .75rem 1.1rem; border-top: 1px solid var(--line); font: 400 .9375rem var(--mono); }
   .in label { color: var(--prompt); white-space: nowrap; }
@@ -73,6 +160,7 @@
     .rail { position: sticky; top: 3rem; }
     .cmds { flex-direction: column; align-items: flex-start; }
     .out { min-height: 34rem; max-height: calc(100vh - 12rem); }
+    .fetch { grid-template-columns: max-content minmax(0, 1fr); align-items: start; }
   }
 </style>
 
@@ -88,6 +176,7 @@
       <span>QatarEnergy LNG, June to July 2026</span>
     </div>
     <div class="cmds" id="cmds"></div>
+    <div class="hint">or type: ls, cd projects, help</div>
     <div class="direct">
       <a href="/cv.pdf">Download CV</a>
       <a href="https://github.com/oelmokadem">GitHub</a>
@@ -96,28 +185,46 @@
   </aside>
 
   <section class="term" aria-label="Terminal">
-    <div class="bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>omar@oelmokadem.me: ~</div>
-    <div class="out" id="out" aria-live="polite"></div>
+    <div class="bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <div class="tabs" id="tabs" role="tablist" aria-label="Terminal tabs"><button type="button" class="tab" role="tab" id="tab-main" data-tab="main" aria-selected="true" aria-controls="out">zsh: ~</button></div>
+    </div>
+    <div class="out" id="out" role="tabpanel" aria-labelledby="tab-main" aria-live="polite"></div>
+    <div id="panes"></div>
     <form class="in" id="form">
-      <label for="cmd">omar@qu:~$</label>
-      <input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type help, or pick a command">
+      <label for="cmd" id="ps1">omar@qu:~$</label>
+      <input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type help, Tab completes">
     </form>
   </section>
 </div>
 
 <noscript>
-  <p style="max-width:1280px;margin:1rem auto">Projects: ACM Banner Redesign (Chrome extension), Mizan: Islamic Habit Tracker (App Store), Homelab, Automated notification system.
-  Contact: omarsamirelmokadem@gmail.com</p>
+  <p style="max-width:1280px;margin:1rem auto">Summer Intern, Internal Audit and Cybersecurity, QatarEnergy LNG (2026). Projects: ACM Banner Redesign (Chrome extension), Mizan: Islamic Habit Tracker (App Store), Homelab, Automated notification system. Contact: omarsamirelmokadem@gmail.com</p>
 </noscript>
 
 <script>
+(function () {
   var CV_URL = "/cv.pdf";
-  var out = document.getElementById("out");
+  var REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* Mizan screenshots, served from the App Store listing */
+  var MZ = "https://is1-ssl.mzstatic.com/image/thumb/";
+  var MIZAN = [
+    ["Today", "PurpleSource221/v4/07/5c/99/075c9991-c95e-1678-b2cd-970062b55bef/01-today.png"],
+    ["History", "PurpleSource211/v4/b6/8d/eb/b68deb23-535e-53c1-451b-69f60644d28d/02-history.png"],
+    ["Groups", "PurpleSource221/v4/26/51/d3/2651d3d7-29a8-4da8-1e41-1af550cc8605/03-groups.png"],
+    ["Group safety", "PurpleSource211/v4/45/25/42/452542ae-ef08-6cd9-306d-5629aeb4f3f2/04-group-safety.png"],
+    ["Privacy", "PurpleSource221/v4/c0/9a/ca/c09acae5-bb54-3bd0-8f49-d171f45957cb/05-privacy-controls.png"]
+  ].map(function (r) { return { label: r[0], src: MZ + r[1] + "/460x0w.webp" }; });
+
+  var out = document.getElementById("out"), input = document.getElementById("cmd"), ps1 = document.getElementById("ps1");
+  var cwd = "~", hist = [], hi = 0, busy = false, queue = [];
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function link(href, text) { return '<a href="' + href + '">' + esc(text) + "</a>"; }
+  function sp(cls, t) { return '<span class="' + cls + '">' + t + "</span>"; }
   function entry(o) {
-    var h = '<div class="entry"><div><span class="h">' + esc(o.name) + "</span>" + (o.when ? '  <span class="dim">' + esc(o.when) + "</span>" : "") + "</div>";
+    var nm = o.open ? '<button type="button" class="pl" data-open="' + o.open + '" title="Open preview in a new tab">' + esc(o.name) + "</button>" : sp("h", esc(o.name));
+    var h = '<div class="entry"><div>' + nm + (o.when ? "  " + sp("dim", esc(o.when)) : "") + "</div>";
     if (o.sub) h += '<div class="sub">' + esc(o.sub) + "</div>";
     h += '<div class="desc">' + o.desc.map(function (d) { return "<p>" + d + "</p>"; }).join("") + "</div>";
     if (o.links) h += '<div class="go">' + o.links.join("") + "</div>";
@@ -125,89 +232,336 @@
     return h + "</div>";
   }
 
-  var C = {
-    whoami: function () {
-      return entry({ name: "Omar Elmokadem", sub: "Computer science student, Qatar University",
-        desc: ["Summer Intern, Internal Audit and Cybersecurity at QatarEnergy LNG (2026).",
-               "BSc Computer Science, College of Engineering. Honors Program, GPA 3.93 / 4.00.",
-               "Tech Team member, " + link("https://qu.acm.org/", "ACM QU Chapter") + "."] });
-    },
-    projects: function () {
-      return [
-        entry({ name: "acm-banner/", sub: "ACM Banner Redesign. Chrome extension",
-          desc: ["A Chrome extension for the ACM QU Chapter that restyles Qatar University's myBanner portal.",
-                 "Two themes (QU maroon and ACM mint), light and dark modes, English and Arabic. Open source under MIT."],
-          links: [link("https://chromewebstore.google.com/detail/jlkacmjcffobfchlhmeeifpgefkaifcn", "Chrome Web Store")],
-          stack: "JavaScript, CSS" }),
-        entry({ name: "mizan/", sub: "Mizan: Islamic Habit Tracker. Mobile app",
-          desc: ["A mobile app for tracking daily Islamic habits.",
-                 '<span class="ok">Live on the App Store.</span> <span class="dim">Android version in closed beta on Google Play.</span>'],
-          links: [link("https://apps.apple.com/us/app/mizan-islamic-tracker/id6768990599", "App Store")],
-          stack: "Expo, React Native, MongoDB Atlas" }),
-        entry({ name: "homelab/", sub: "Self-hosted home server",
-          desc: ["A Proxmox server running self-hosted services in Docker, secured behind Cloudflare and Nginx Proxy Manager."],
-          stack: "Proxmox VE, Docker, Nginx Proxy Manager, Cloudflare" }),
-        entry({ name: "notifier/", sub: "Automated notification system",
-          desc: ["Watches an online platform for updates and sends real-time alerts to Discord and WhatsApp.",
-                 "Scheduled on Azure Functions, with error handling and status logging."],
-          stack: "Python, Azure Functions, Discord webhooks" })
-      ].join("");
-    },
-    experience: function () {
-      return entry({ name: "QatarEnergy LNG", when: "Jun to Jul 2026", sub: "Summer Intern, Internal Audit and Cybersecurity",
-          desc: ['<span class="ok">Internal Audit</span> <span class="dim">3 weeks</span>',
-                 "Worked on internal IT audit engagements covering Information Risk Management and the Security and Network Operations Centres.",
-                 "Reviewed departmental risk assessments and drafted audit questions from them to support the audit of a department.",
-                 "Cross-referenced controls against ISO/IEC 27002:2022 and NIST CSF 2.0.",
-                 '<br><span class="ok">Cybersecurity</span> <span class="dim">1 week</span>',
-                 "Gained hands-on experience with Burp Suite under the guidance of the security team."],
-          stack: "ISO/IEC 27002:2022, NIST CSF 2.0, Burp Suite, Excel" }) +
-        entry({ name: "ACM QU Chapter", sub: "Tech Team member",
-          desc: ["Builds tools for the chapter, including the ACM Banner Redesign extension."],
-          links: [link("https://qu.acm.org/", "qu.acm.org")] });
-    },
-    awards: function () {
-      return entry({ name: "1st place", when: "Aug 2025", sub: "Microsoft x Qatar Scientific Club Summer Data Camp",
-          desc: ["Five-day data and AI program. Built insights from Qatar Open Data Portal datasets with Power BI and AI models."] }) +
-        entry({ name: "3rd place", when: "Nov to Dec 2025", sub: "Qatar University Health Tech Hackathon",
-          desc: ["Developed a health-tech project and presented it to judges at World Summit AI Qatar."] });
-    },
-    contact: function () {
-      return '<div class="kv">' +
-        '<span class="dim">email</span><span>' + link("mailto:omarsamirelmokadem@gmail.com", "omarsamirelmokadem@gmail.com") + "</span>" +
-        '<span class="dim">github</span><span>' + link("https://github.com/oelmokadem", "github.com/oelmokadem") + "</span>" +
-        '<span class="dim">linkedin</span><span>' + link("https://www.linkedin.com/in/oelmokadem", "linkedin.com/in/oelmokadem") + "</span>" +
-        '<span class="dim">cv</span><span>' + link(CV_URL, "Download CV (PDF)") + "</span></div>";
-    },
-    help: function () {
-      return "commands: " + ["experience", "projects", "whoami", "awards", "contact", "clear"].map(function (k) { return '<span class="c">' + k + "</span>"; }).join("  ");
-    },
-    clear: function () { out.innerHTML = ""; return null; }
+  /* ---------- content ---------- */
+  var P = {
+    "acm-banner": entry({ name: "acm-banner/", open: "acm-banner", sub: "ACM Banner Redesign. Chrome extension",
+      desc: ["A Chrome extension for the ACM QU Chapter that restyles Qatar University's myBanner portal.",
+             "Two themes (QU maroon and ACM mint), light and dark modes, English and Arabic. Open source under MIT."],
+      links: [link("https://chromewebstore.google.com/detail/jlkacmjcffobfchlhmeeifpgefkaifcn", "Chrome Web Store"), '<span class="dim">click the name or run open acm-banner</span>'],
+      stack: "JavaScript, CSS" }),
+    "mizan": entry({ name: "mizan/", open: "mizan", sub: "Mizan: Islamic Habit Tracker. Mobile app",
+      desc: ["A mobile app for tracking daily Islamic habits.",
+             sp("ok", "Live on the App Store.") + " " + sp("dim", "Android version in closed beta on Google Play.")],
+      links: [link("https://apps.apple.com/us/app/mizan-islamic-tracker/id6768990599", "App Store"), '<span class="dim">click the name or run open mizan</span>'],
+      stack: "Expo, React Native, MongoDB Atlas" }),
+    "homelab": entry({ name: "homelab/", open: "homelab", sub: "Self-hosted home server",
+      desc: ["A Proxmox server running self-hosted services in Docker, secured behind Cloudflare and Nginx Proxy Manager."],
+      links: ['<span class="dim">click the name or run open homelab</span>'],
+      stack: "Proxmox VE, Docker, Nginx Proxy Manager, Cloudflare" }),
+    "notifier": entry({ name: "notifier/", open: "notifier", sub: "Automated notification system",
+      desc: ["Watches an online platform for updates and sends real-time alerts to Discord and WhatsApp.",
+             "Scheduled on Azure Functions, with error handling and status logging."],
+      links: ['<span class="dim">click the name or run open notifier</span>'],
+      stack: "Python, Azure Functions, Discord webhooks" })
+  };
+  var ORDER = ["acm-banner", "mizan", "homelab", "notifier"];
+
+  var EXP = {
+    "qatarenergy-lng.md": entry({ name: "QatarEnergy LNG", when: "Jun to Jul 2026", sub: "Summer Intern, Internal Audit and Cybersecurity",
+      desc: [sp("ok", "Internal Audit") + " " + sp("dim", "3 weeks"),
+             "Worked on internal IT audit engagements covering Information Risk Management and the Security and Network Operations Centres.",
+             "Reviewed departmental risk assessments and drafted audit questions from them to support the audit of a department.",
+             "Cross-referenced controls against ISO/IEC 27002:2022 and NIST CSF 2.0.",
+             "<br>" + sp("ok", "Cybersecurity") + " " + sp("dim", "1 week"),
+             "Gained hands-on experience with Burp Suite under the guidance of the security team."],
+      stack: "ISO/IEC 27002:2022, NIST CSF 2.0, Burp Suite, Excel" }),
+    "acm-qu.md": entry({ name: "ACM QU Chapter", sub: "Tech Team member",
+      desc: ["Builds tools for the chapter, including the ACM Banner Redesign extension."],
+      links: [link("https://qu.acm.org/", "qu.acm.org")] })
   };
 
-  function run(cmd, opts) {
-    cmd = (cmd || "").trim().toLowerCase();
-    if (!cmd) return;
-    var body = C.hasOwnProperty(cmd) ? C[cmd]() : '<span class="dim">command not found: ' + esc(cmd) + ". Try help.</span>";
-    if (body === null) return;
-    var d = document.createElement("div"); d.className = "block";
-    d.innerHTML = '<div class="cmdline"><span class="p">omar@qu:~$ </span><span class="c">' + esc(cmd) + "</span></div>" + body;
-    out.appendChild(d);
-    if (!opts || !opts.quiet) d.scrollIntoView({ block: "nearest" }), out.scrollTop = d.offsetTop - out.offsetTop - 8;
+  var AWARDS = entry({ name: "1st place", when: "Aug 2025", sub: "Microsoft x Qatar Scientific Club Summer Data Camp",
+      desc: ["Five-day data and AI program. Built insights from Qatar Open Data Portal datasets with Power BI and AI models."] }) +
+    entry({ name: "3rd place", when: "Nov to Dec 2025", sub: "Qatar University Health Tech Hackathon",
+      desc: ["Developed a health-tech project and presented it to judges at World Summit AI Qatar."] });
+
+  var CONTACT = '<div class="kv">' +
+    sp("dim", "email") + "<span>" + link("mailto:omarsamirelmokadem@gmail.com", "omarsamirelmokadem@gmail.com") + "</span>" +
+    sp("dim", "github") + "<span>" + link("https://github.com/oelmokadem", "github.com/oelmokadem") + "</span>" +
+    sp("dim", "linkedin") + "<span>" + link("https://www.linkedin.com/in/oelmokadem", "linkedin.com/in/oelmokadem") + "</span>" +
+    sp("dim", "cv") + "<span>" + link(CV_URL, "Download CV (PDF)") + "</span></div>";
+
+  var LOGO = [
+    "  ___    ___ ",
+    " / _ \\  | __|",
+    "| (_) | | _| ",
+    " \\___/  |___|"
+  ].join("\n");
+
+  function neofetch() {
+    var kv = [["name", "Omar Elmokadem"], ["degree", "BSc Computer Science, Honors Program"], ["university", "Qatar University"], ["gpa", "3.93 / 4.00"],
+              ["uptime", "Class of 2028"], ["team", "Tech Team, ACM QU Chapter"], ["langs", "Python, Java, JavaScript, SQL"]];
+    return '<div class="fetch"><pre aria-hidden="true">' + esc(LOGO) + '</pre><div><div class="kv">' +
+      kv.map(function (r) { return "<span>" + r[0] + "</span><span>" + esc(r[1]) + "</span>"; }).join("") +
+      '</div><div class="swatch" aria-hidden="true"><i style="background:#E58BA4"></i><i style="background:#F2C879"></i><i style="background:#9FD3B4"></i><i style="background:#8FB8E8"></i><i style="background:#E4E2DC"></i><i style="background:#8C918F"></i></div></div></div>';
   }
 
+  /* ---------- filesystem ---------- */
+  var FS = {
+    "~": ["experience/", "projects/", "awards.txt", "contact.txt", "cv.pdf"],
+    "~/experience": ["qatarenergy-lng.md", "acm-qu.md"],
+    "~/projects": ORDER.map(function (k) { return k + "/"; })
+  };
+  function resolve(arg) {
+    if (!arg || arg === "~" || arg === "/") return "~";
+    arg = arg.replace(/\/+$/, "");
+    if (arg === "..") return cwd === "~" ? "~" : "~";
+    if (arg.indexOf("~/") === 0) return arg;
+    return cwd === "~" ? "~/" + arg : cwd + "/" + arg;
+  }
+  function ls(dir) {
+    var d = resolve(dir);
+    if (FS[d]) return '<div class="ls">' + FS[d].map(function (n) { return /\/$/.test(n) ? sp("dir", esc(n)) : "<span>" + esc(n) + "</span>"; }).join("") + "</div>";
+    var base = d.split("/").pop();
+    if (P[base]) return '<div class="ls"><span>README.md</span>' + (P[base] ? "<span>screenshots/</span>" : "") + "</div>";
+    return sp("err", "ls: cannot access '" + esc(dir) + "': No such file or directory");
+  }
+  function setPrompt() {
+    ps1.textContent = "omar@qu:" + cwd + "$";
+    document.getElementById("tab-main").textContent = "zsh: " + cwd;
+  }
+
+  /* ---------- previews ---------- */
+  function preview(name) {
+    if (name === "notifier") {
+      var t = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Qatar" });
+      return '<div class="win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span>#alerts, example message</div>' +
+        '<div class="alert"><div class="av" aria-hidden="true">N</div><div><div class="who">notifier<span class="bot">BOT</span><small>Today at ' + t + '</small></div>' +
+        '<div class="emb"><b>Update detected</b><span class="dim">The watched page changed. Details and link are sent here and to WhatsApp.</span></div></div></div></div>';
+    }
+    if (name === "homelab") {
+      var diagram = [
+        "  internet",
+        "     |",
+        "  [ Cloudflare ]",
+        "     |",
+        "  [ Nginx Proxy Manager ]   reverse proxy, TLS",
+        "     |",
+        "  [ Docker ]                self-hosted services",
+        "     |",
+        "  [ Proxmox VE ]            home server"
+      ].join("\n");
+      return '<div class="win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span>homelab/topology.txt</div>' +
+        '<pre class="empty" style="margin:0;color:var(--fg);font:inherit;white-space:pre;overflow-x:auto">' + esc(diagram) + "</pre></div>";
+    }
+    if (name === "mizan") {
+      return '<div class="win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span>mizan, App Store screenshots</div>' +
+        '<div class="demo mz" data-i="0"><div class="phone"><img src="' + MIZAN[0].src + '" alt="Mizan: ' + MIZAN[0].label + ' screen" width="460" height="995"></div>' +
+        '<div class="ctl"><div class="seg">' + MIZAN.map(function (m, k) { return '<button type="button" data-mz="' + k + '" aria-pressed="' + (k ? "false" : "true") + '">' + m.label + "</button>"; }).join("") + "</div>" +
+        '<div class="nav"><button type="button" data-mzstep="-1" aria-label="Previous screen">&larr;</button><span class="dim" data-mzpos>1 / ' + MIZAN.length + '</span><button type="button" data-mzstep="1" aria-label="Next screen">&rarr;</button></div>' +
+        '<p class="dim">Screens from the App Store listing.</p></div></div></div>';
+    }
+    if (name === "acm-banner") {
+      return '<div class="win"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span>acm-banner, live demo with sample data</div>' +
+        '<div class="demo bn"><div class="ctl row">' +
+          '<div class="seg" role="group" aria-label="Theme"><button type="button" data-bt="qu" aria-pressed="true">QU maroon</button><button type="button" data-bt="acm" aria-pressed="false">ACM mint</button></div>' +
+          '<div class="seg" role="group" aria-label="Appearance"><button type="button" data-ba="light" aria-pressed="true">Light</button><button type="button" data-ba="dark" aria-pressed="false">Dark</button></div>' +
+          '<div class="seg" role="group" aria-label="Extension"><button type="button" data-bo="on" aria-pressed="true">Extension on</button><button type="button" data-bo="off" aria-pressed="false">Off</button></div>' +
+        '</div>' +
+        '<div class="mb" data-skin="qu-light">' +
+          '<div class="mb-url">mybanner.qu.edu.qa</div>' +
+          '<div class="mb-head"><b>myBanner</b><span>Qatar University</span></div>' +
+          '<div class="mb-body"><div class="mb-title">Main Menu</div>' +
+            '<div class="mb-note">Welcome back. Registration for Spring opens next week.</div>' +
+            '<div class="mb-grid">' +
+              [["Student Records", "Transcript, grades and holds"], ["Registration", "Add or drop classes, look up sections"], ["Student Account", "Fees and payments"], ["Personal Information", "Address, phone and emergency contact"]]
+                .map(function (r) { return '<div class="mb-card"><b>' + r[0] + "</b><span>" + r[1] + "</span></div>"; }).join("") +
+            "</div></div></div>" +
+        '<p class="dim" style="margin:.5rem 0 0">Colors and fonts come from the extension\'s own stylesheet. Menu text is sample data.</p></div></div>';
+    }
+    return null;
+  }
+
+  /* ---------- commands ---------- */
+  var C = {
+    help: function () {
+      return '<div class="kv">' + [["experience", "the internship and ACM"], ["projects", "what I've built"], ["open <name>", "preview a project (acm-banner, mizan, homelab, notifier)"],
+        ["whoami", "system info"], ["awards", "placements"], ["contact", "email, GitHub, LinkedIn, CV"], ["ls, cd, cat, pwd", "walk the filesystem"], ["clear", "clear the screen"]]
+        .map(function (r) { return sp("c", esc(r[0])) + sp("dim", esc(r[1])); }).join("") + "</div>";
+    },
+    whoami: neofetch, neofetch: neofetch,
+    experience: function () { return EXP["qatarenergy-lng.md"] + EXP["acm-qu.md"]; },
+    projects: function () { return ORDER.map(function (k) { return P[k]; }).join(""); },
+    awards: function () { return AWARDS; },
+    contact: function () { return CONTACT; },
+    ls: function (a) { return ls(a[0] || cwd); },
+    pwd: function () { return "/home/omar" + cwd.slice(1); },
+    cd: function (a) {
+      var d = resolve(a[0]);
+      if (FS[d]) { cwd = d; setPrompt(); return ""; }
+      var base = d.split("/").pop();
+      if (P[base]) return sp("dim", "tip: try ") + sp("c", "open " + esc(base));
+      return sp("err", "cd: no such file or directory: " + esc(a[0] || ""));
+    },
+    cat: function (a) {
+      var f = (a[0] || "").replace(/^~\//, ""), base = f.split("/").pop();
+      if (!f) return sp("err", "cat: missing file operand");
+      if (EXP[base]) return EXP[base];
+      if (base === "awards.txt") return AWARDS;
+      if (base === "contact.txt") return CONTACT;
+      if (base === "README.md" || P[base.replace(/\/$/, "")]) { var k = (f.split("/").filter(function (x) { return P[x]; })[0]) || cwd.split("/").pop(); if (P[k]) return P[k]; }
+      if (base === "cv.pdf") return sp("dim", "binary file. try ") + sp("c", "open cv.pdf");
+      return sp("err", "cat: " + esc(a[0]) + ": No such file or directory");
+    },
+    open: function (a) {
+      var n = (a[0] || "").replace(/\/$/, "").split("/").pop() || (cwd.indexOf("~/projects/") === 0 ? cwd.split("/").pop() : "");
+      if (n === "cv.pdf" || n === "cv") { return "opening " + link(CV_URL, "cv.pdf") + sp("dim", " (tap the link)"); }
+      if (!n) return sp("err", "open: which one? ") + ORDER.map(function (k) { return sp("c", k); }).join("  ");
+      if (P[n] && preview(n)) { setTimeout(function () { openTab(n); }, 0); return sp("dim", "opened ") + sp("c", esc(n)) + sp("dim", " in a new tab"); }
+      return sp("err", "open: " + esc(n) + ": no such project. try ") + ORDER.map(function (k) { return sp("c", k); }).join("  ");
+    },
+    clear: function () { out.innerHTML = ""; return null; },
+    history: function () { return hist.map(function (h, i) { return sp("dim", String(i + 1).padStart(4, " ")) + "  " + esc(h); }).join("<br>"); },
+    date: function () { return esc(new Date().toLocaleString("en-GB", { timeZone: "Asia/Qatar", dateStyle: "full", timeStyle: "short" })) + sp("dim", " (Doha)"); },
+    echo: function (a) { return esc(a.join(" ")); },
+    sudo: function () { return sp("err", "omar is not in the sudoers file. This incident will be reported.") + "<br>" + sp("dim", "(to the internal audit team, obviously)"); },
+    rm: function () { return sp("err", "rm: permission denied. nice try."); },
+    exit: function () { return sp("dim", "there's no leaving. try ") + sp("c", "contact") + sp("dim", " instead."); },
+    ssh: function () { return sp("dim", "ssh: connect to host homelab port 22: filtered. it's behind Cloudflare for a reason."); },
+    hack: function () { return "__hack__"; },
+    vim: function () { return sp("dim", "you are now trapped in vim. just kidding. type ") + sp("c", "help"); },
+    man: function (a) { return a[0] && C[a[0]] ? sp("dim", "no manual entry. it's a portfolio, just run it: ") + sp("c", esc(a[0])) : C.help(); }
+  };
+  C.cls = C.clear; C.dir = C.ls; C.about = C.whoami; C.resume = C.cv = function () { return C.open(["cv.pdf"]); };
+
+  /* ---------- engine ---------- */
+  function scrollTo(el) {
+    var top = el.offsetTop - out.offsetTop - 8;
+    if (out.scrollHeight > out.clientHeight) out.scrollTop = top;
+    else if (el.getBoundingClientRect().top > innerHeight - 80) el.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" });
+  }
+  function block(cmd) {
+    var d = document.createElement("div"); d.className = "block";
+    d.innerHTML = '<div class="cmdline"><span class="p">omar@qu:' + esc(cwd) + '$ </span><span class="c"></span></div><div class="res"></div>';
+    out.appendChild(d); return d;
+  }
+  function typeInto(el, text, done) {
+    if (REDUCED) { el.textContent = text; return done(); }
+    var i = 0; (function tick() { el.textContent = text.slice(0, ++i); if (i < text.length) setTimeout(tick, 22 + Math.random() * 30); else setTimeout(done, 120); })();
+  }
+  function hackAnim(res, done) {
+    var steps = ["bypassing firewall", "decrypting mainframe", "downloading the internet"], i = 0, w = 20;
+    (function next() {
+      if (i >= steps.length) { res.innerHTML += sp("ok", "access granted.") + " " + sp("dim", "it's a portfolio. try ") + sp("c", "experience"); return done(); }
+      var line = document.createElement("div"); res.appendChild(line); var n = 0;
+      (function bar() {
+        line.innerHTML = sp("dim", steps[i].padEnd(26, " ")) + '<span class="prog">[' + "#".repeat(n) + " ".repeat(w - n) + "]</span>";
+        if (n++ < w) setTimeout(bar, REDUCED ? 0 : 35); else { i++; next(); }
+      })();
+    })();
+  }
+  function exec(raw, opts, done) {
+    var parts = raw.trim().split(/\s+/), name = (parts.shift() || "").toLowerCase();
+    if (!name) return done();
+    var d = block(raw), cl = d.querySelector(".c"), res = d.querySelector(".res");
+    var finish = function () {
+      var body;
+      if (name === "clear" || name === "cls") { out.innerHTML = ""; return done(); }
+      body = C.hasOwnProperty(name) ? C[name](parts) : sp("err", "zsh: command not found: " + esc(name)) + "<br>" + sp("dim", "try ") + sp("c", "help");
+      if (body === "__hack__") return hackAnim(res, function () { if (!opts.quiet) scrollTo(d); done(); });
+      res.innerHTML = body || "";
+      if (!body) d.querySelector(".res").remove();
+      if (!opts.quiet) scrollTo(d);
+      done();
+    };
+    if (opts.typed) typeInto(cl, raw, finish); else { cl.textContent = raw; finish(); }
+  }
+  function run(raw, opts) {
+    opts = opts || {};
+    if (out.hidden && !/^open\s/.test(raw.trim())) selectTab("main");
+    queue.push([raw, opts]);
+    if (!busy) pump();
+  }
+  function pump() {
+    var job = queue.shift(); if (!job) { busy = false; return; }
+    busy = true; exec(job[0], job[1], pump);
+  }
+
+  /* ---------- tabs ---------- */
+  var tabsEl = document.getElementById("tabs"), panesEl = document.getElementById("panes"), form = document.getElementById("form"), term = document.querySelector(".term");
+  function selectTab(id) {
+    tabsEl.querySelectorAll(".tab").forEach(function (t) { t.setAttribute("aria-selected", t.getAttribute("data-tab") === id ? "true" : "false"); });
+    out.hidden = id !== "main"; form.hidden = id !== "main";
+    panesEl.querySelectorAll(".pane").forEach(function (pn) { pn.hidden = pn.getAttribute("data-pane") !== id; });
+    var t = tabsEl.querySelector('[data-tab="' + id + '"]'); if (t) t.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+  function openTab(name) {
+    if (!tabsEl.querySelector('[data-tab="' + name + '"]')) {
+      var t = document.createElement("button"); t.type = "button"; t.className = "tab"; t.setAttribute("role", "tab"); t.setAttribute("data-tab", name);
+      t.id = "tab-" + name; t.setAttribute("aria-controls", "pane-" + name);
+      t.innerHTML = esc(name) + '<span class="x" data-close="' + name + '" aria-label="Close ' + esc(name) + ' tab" role="button">&times;</span>';
+      tabsEl.appendChild(t);
+      var pn = document.createElement("div"); pn.className = "out pane"; pn.id = "pane-" + name; pn.setAttribute("data-pane", name);
+      pn.setAttribute("role", "tabpanel"); pn.setAttribute("aria-labelledby", "tab-" + name);
+      pn.innerHTML = P[name].replace(/<div class="go">(.*?)<span class="dim">click the name[^<]*<\/span><\/div>/, '<div class="go">$1</div>').replace(/<div class="go"><\/div>/, "") + preview(name);
+      panesEl.appendChild(pn);
+    }
+    selectTab(name);
+    if (term.getBoundingClientRect().top < 0 || term.getBoundingClientRect().top > innerHeight * .6) term.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" });
+  }
+  function closeTab(name) {
+    var t = tabsEl.querySelector('[data-tab="' + name + '"]'), pn = document.getElementById("pane-" + name);
+    var wasOn = t && t.getAttribute("aria-selected") === "true";
+    if (t) t.remove(); if (pn) pn.remove();
+    if (wasOn) selectTab("main");
+  }
+
+  /* ---------- input ---------- */
   var cmds = document.getElementById("cmds");
-  ["experience", "projects", "whoami", "awards", "contact"].forEach(function (k) {
+  ["experience", "projects", "open acm-banner", "open mizan", "whoami", "contact"].forEach(function (k) {
     var b = document.createElement("button"); b.type = "button"; b.textContent = "$ " + k;
-    b.addEventListener("click", function () { run(k); }); cmds.appendChild(b);
+    b.addEventListener("click", function () { run(k, { typed: true }); }); cmds.appendChild(b);
   });
   document.getElementById("form").addEventListener("submit", function (e) {
-    e.preventDefault(); var i = document.getElementById("cmd"); run(i.value); i.value = "";
+    e.preventDefault(); var v = input.value; input.value = "";
+    if (v.trim()) { hist.push(v.trim()); hi = hist.length; }
+    run(v);
   });
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowUp") { if (hi > 0) input.value = hist[--hi]; e.preventDefault(); }
+    else if (e.key === "ArrowDown") { if (hi < hist.length - 1) input.value = hist[++hi]; else { hi = hist.length; input.value = ""; } e.preventDefault(); }
+    else if (e.key === "Tab") {
+      e.preventDefault();
+      var v = input.value, sp1 = v.lastIndexOf(" "), head = v.slice(0, sp1 + 1), tail = v.slice(sp1 + 1);
+      var pool = sp1 < 0 ? Object.keys(C) : (FS[cwd] || []).concat(ORDER, ["cv.pdf"]);
+      var m = pool.filter(function (k) { return k.indexOf(tail) === 0; });
+      if (m.length === 1) input.value = head + m[0] + (sp1 < 0 ? " " : "");
+      else if (m.length > 1) { var d = block(v); d.querySelector(".c").textContent = v; d.querySelector(".res").innerHTML = '<div class="ls">' + m.map(esc).map(function (x) { return "<span>" + x + "</span>"; }).join("") + "</div>"; scrollTo(d); }
+    }
+  });
+  term.addEventListener("click", function (e) {
+    var x = e.target.closest("[data-close]");
+    if (x) { e.stopPropagation(); closeTab(x.getAttribute("data-close")); return; }
+    var b = e.target.closest("button");
+    if (!b) return;
+    if (b.hasAttribute("data-tab")) { selectTab(b.getAttribute("data-tab")); return; }
+    if (b.hasAttribute("data-open")) { openTab(b.getAttribute("data-open")); return; }
+    var demo = b.closest(".demo");
+    if (demo && demo.classList.contains("mz")) {
+      var n = MIZAN.length, i = +demo.getAttribute("data-i");
+      if (b.hasAttribute("data-mz")) i = +b.getAttribute("data-mz");
+      if (b.hasAttribute("data-mzstep")) i = (i + +b.getAttribute("data-mzstep") + n) % n;
+      demo.setAttribute("data-i", i);
+      var img = demo.querySelector("img"); img.src = MIZAN[i].src; img.alt = "Mizan: " + MIZAN[i].label + " screen";
+      demo.querySelectorAll("[data-mz]").forEach(function (x) { x.setAttribute("aria-pressed", +x.getAttribute("data-mz") === i ? "true" : "false"); });
+      demo.querySelector("[data-mzpos]").textContent = (i + 1) + " / " + n;
+    }
+    if (demo && demo.classList.contains("bn")) {
+      b.parentNode.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      var t = demo.querySelector('[data-bt][aria-pressed="true"]').getAttribute("data-bt");
+      var a = demo.querySelector('[data-ba][aria-pressed="true"]').getAttribute("data-ba");
+      var on = demo.querySelector('[data-bo][aria-pressed="true"]').getAttribute("data-bo") === "on";
+      demo.querySelector(".mb").setAttribute("data-skin", on ? t + "-" + a : "off");
+    }
+  });
+  out.addEventListener("click", function (e) {
+    if (e.target.closest("button")) return; if (!e.target.closest("a") && !e.target.closest(".demo") && !getSelection().toString() && matchMedia("(min-width: 960px)").matches) input.focus(); });
 
+  /* ---------- start ---------- */
   try { if (/[?&]via=nfc/.test(location.search)) history.replaceState(null, "", location.pathname); } catch (e) {}
-  ["whoami", "experience"].forEach(function (k) { run(k, { quiet: true }); });
-  out.scrollTop = 0;
+  run("whoami", { quiet: true, typed: !REDUCED }); run("experience", { quiet: true, typed: !REDUCED });
+  setPrompt();
+})();
 </script>
 
 </body>
